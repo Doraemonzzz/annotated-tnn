@@ -146,78 +146,80 @@
 <h1 id="_2">预备知识</h1>
 <h2 id="token-mixing-and-channel-mixing">Token mixing and channel mixing</h2>
 <p>让我们首先从Transformer开始。Transformer作为一个网络结构已经席卷了各个领域，其核心部分主要可以由如下两个计算公式描述：
-$$
+<script type="math/tex; mode=display">
 \begin{aligned}
-\mathbf X_1 &amp;=\mathrm{Norm}(\mathbf X + \mathrm{MHA}(\mathbf X)),\
-\mathbf O &amp;= \mathrm{Norm}(\mathbf X_1 + \mathrm{FFN}(\mathbf X_1)).
+\mathbf X_1 &=\mathrm{Norm}(\mathbf X + \mathrm{MHA}(\mathbf X)),\\
+\mathbf O &= \mathrm{Norm}(\mathbf X_1 + \mathrm{FFN}(\mathbf X_1)).
 \end{aligned}
-$$
-其中<span class="arithmatex">\(\mathbf X \in \mathbb R^{n\times d}\)</span>是输入（也可以称为token matrix，其中矩阵的每一行为一个token的向量表示），<span class="arithmatex">\(n\)</span>是序列长度，<span class="arithmatex">\(d\)</span>是特征维度。</p>
-<p>既然现在有两个主要模块——<span class="arithmatex">\(\mathrm {MHA}\)</span>和<span class="arithmatex">\(\mathrm {FFN}\)</span>，那么他们的作用是否有所不同呢？在<a href="https://arxiv.org/abs/2111.11418">Metaformer</a>一文中，研究者指出，<span class="arithmatex">\(\mathrm {MHA}\)</span>的主要作用是Token mixing，而<span class="arithmatex">\(\mathrm {FFN}\)</span>的主要作用是Channel mixing。</p>
-<p>这是什么意思呢？我们可以从矩阵乘法的角度清晰的理解这点：给定输入（token matrix）<span class="arithmatex">\(\mathbf X \in \mathbb R^{n\times d}\)</span>，考虑矩阵乘法<span class="arithmatex">\(\mathbf A \mathbf X\)</span>和<span class="arithmatex">\(\mathbf X \mathbf B\)</span>，那么：
-- <span class="arithmatex">\(\mathbf A \mathbf X\)</span>表示矩阵<span class="arithmatex">\(\mathbf X\)</span>行的线性组合，而每一行表示一个token，即token的线性组合，所以称为token mixing；
-- <span class="arithmatex">\(\mathbf X  \mathbf B\)</span>表示矩阵<span class="arithmatex">\(\mathbf X\)</span>列的线性组合，而每一列表示一个channel，即channel的线性组合，所以称为channel mixing；</p>
-<p>在Transformer中，矩阵<span class="arithmatex">\(\mathbf A\)</span>即为<span class="arithmatex">\(\mathrm{Softmax}(\mathbf Q \mathbf K^{\top} /\sqrt{d})\)</span>，矩阵<span class="arithmatex">\(\mathbf B\)</span>即为<span class="arithmatex">\(\mathrm {FFN}\)</span>中的全连接层。</p>
-<p>大多数对Transformer的改进都是集中在token mixing:<span class="arithmatex">\(\mathbf A \mathbf X\)</span>的计算上，以各种各样的方式降低其运算复杂度，TNN也是使用了类似的思路，最核心的一点就是利用了相对位置编码，或者说，Toeplitz矩阵。</p>
+</script>
+其中$\mathbf X \in \mathbb R^{n\times d}$是输入（也可以称为token matrix，其中矩阵的每一行为一个token的向量表示），$n$是序列长度，$d$是特征维度。</p>
+<p>既然现在有两个主要模块——$\mathrm {MHA}$和$\mathrm {FFN}$，那么他们的作用是否有所不同呢？在<a href="https://arxiv.org/abs/2111.11418">Metaformer</a>一文中，研究者指出，$\mathrm {MHA}$的主要作用是Token mixing，而$\mathrm {FFN}$的主要作用是Channel mixing。</p>
+<p>这是什么意思呢？我们可以从矩阵乘法的角度清晰的理解这点：给定输入（token matrix）$\mathbf X \in \mathbb R^{n\times d}$，考虑矩阵乘法$\mathbf A \mathbf X$和$\mathbf X \mathbf B$，那么：
+- $\mathbf A \mathbf X$表示矩阵$\mathbf X$行的线性组合，而每一行表示一个token，即token的线性组合，所以称为token mixing；
+- $\mathbf X  \mathbf B$表示矩阵$\mathbf X$列的线性组合，而每一列表示一个channel，即channel的线性组合，所以称为channel mixing；</p>
+<p>在Transformer中，矩阵$\mathbf A$即为$\mathrm{Softmax}(\mathbf Q \mathbf K^{\top} /\sqrt{d})$，矩阵$\mathbf B$即为$\mathrm {FFN}$中的全连接层。</p>
+<p>大多数对Transformer的改进都是集中在token mixing:$\mathbf A \mathbf X$的计算上，以各种各样的方式降低其运算复杂度，TNN也是使用了类似的思路，最核心的一点就是利用了相对位置编码，或者说，Toeplitz矩阵。</p>
 <h2 id="_3">相对位置编码</h2>
 <p>位置编码是Transformer中的重要组成部分，一开始广为使用的是<a href="https://arxiv.org/abs/1706.03762">绝对位置编码(APE)</a>，这种编码的方式可以用如下计算方式概括：
-$$
+<script type="math/tex; mode=display">
 \mathbf x_i =\mathbf w_i + \mathbf p_i.
-$$
-其中<span class="arithmatex">\(\mathbf w_i\)</span>表示第<span class="arithmatex">\(i\)</span>个词的word embedding，<span class="arithmatex">\(\mathbf p_i\)</span>表示第<span class="arithmatex">\(i\)</span>个位置的position embedding。</p>
+</script>
+其中$\mathbf w_i$表示第$i$个词的word embedding，$\mathbf p_i$表示第$i$个位置的position embedding。</p>
 <p>后来，有研究人员发现，在序列建模中，词的相对位置信息，可能比词的绝位置信息更加重要。</p>
 <blockquote>
 <p>例如"我年纪比你大"的语意和"我年纪比你大"完全不同，但是这两句话只是交换了"你"和"我"的位置。
 </p>
 </blockquote>
 <p>于是研究人员开始将相对位置编码引入，相对位置编码的使用和绝对位置编码有所不同，其作用在Attention计算的位置：
-$$
+<script type="math/tex; mode=display">
 \mathbf s_{ij} = \mathbf q_i^{\top} \mathbf k_j/\sqrt{d} + t_{i-j}.
-$$
+</script>
 如果写成矩阵的形式则更加直观：
-$$
+<script type="math/tex; mode=display">
 \begin{aligned}
-\mathbf S &amp; = \mathbf Q \mathbf K^{\top} / \sqrt {d} + \mathbf T,\
-\mathbf T &amp; =\left[\begin{matrix}
-t_0 &amp; t_{-1} &amp; \cdots  &amp; t_{-n+1} \
-t_1 &amp; t_0  &amp;  &amp;  \vdots \
-\vdots &amp;   &amp;   t_0 &amp; t_{-1} \
-t_{n-1} &amp; \ldots  &amp; t_1 &amp; t_0
+\mathbf S & = \mathbf Q \mathbf K^{\top} / \sqrt {d} + \mathbf T,\\
+\mathbf T & =\left[\begin{matrix}
+t_0 & t_{-1} & \cdots  & t_{-n+1} \\
+t_1 & t_0  &  &  \vdots \\
+\vdots &   &   t_0 & t_{-1} \\
+t_{n-1} & \ldots  & t_1 & t_0
 \end{matrix}\right] \in \mathbb R^{n\times n}.
 \end{aligned}
-$$</p>
-<p>这里，矩阵<span class="arithmatex">\(\mathbf T\)</span>有一个数学名称——<a href="https://en.wikipedia.org/wiki/Toeplitz_matrix">Toeplitz矩阵</a>，不难看出该矩阵有<span class="arithmatex">\(2n-1\)</span>个独立元素。</p>
+</script>
+</p>
+<p>这里，矩阵$\mathbf T$有一个数学名称——<a href="https://en.wikipedia.org/wiki/Toeplitz_matrix">Toeplitz矩阵</a>，不难看出该矩阵有$2n-1$个独立元素。</p>
 <h1 id="tnn">TNN的动机</h1>
 <p>有了之前的准备工作，可以引入我们工作的两个动机：
 1. 既然相对位置信息如此重要，那么有没有可能只依赖于相对位置信息（Toeplitz matrix）进行token mixing呢？
    1. 直观上来说，就是将Attention Matrix替换为Toeplitz matrix。
-2. 假设(1)成立，那么我们需要进行的主要操作是<span class="arithmatex">\(\mathbf T \mathbf X\)</span>，既然矩阵<span class="arithmatex">\(\mathbf T\)</span>是一个特殊结构的矩阵，那么有没有可能加速运算呢？</p>
+2. 假设(1)成立，那么我们需要进行的主要操作是$\mathbf T \mathbf X$，既然矩阵$\mathbf T$是一个特殊结构的矩阵，那么有没有可能加速运算呢？</p>
 <p>我们对两个问题都进行了肯定的答复：
 1. 完全可以只依赖于相对位置信息进行token mixing；
-2. 由于矩阵的特殊性，可以将运算复杂度由<span class="arithmatex">\(O(n^2 d)\)</span>降低为<span class="arithmatex">\(O(nd\log n)\)</span>；</p>
-<p>可以看到，我们的动机极其简单和优雅，最核心的思路就是将<span class="arithmatex">\(\mathrm{Softmax}(\mathbf Q \mathbf K^{\top} / \sqrt {d})\)</span>替换为<span class="arithmatex">\(\mathbf T\)</span>，但是，这种简单的替换就可以拥有比各种花哨更改更好的性能，这就更加验证了相对位置信息在序列建模中的重要性。</p>
+2. 由于矩阵的特殊性，可以将运算复杂度由$O(n^2 d)$降低为$O(nd\log n)$；</p>
+<p>可以看到，我们的动机极其简单和优雅，最核心的思路就是将$\mathrm{Softmax}(\mathbf Q \mathbf K^{\top} / \sqrt {d})$替换为$\mathbf T$，但是，这种简单的替换就可以拥有比各种花哨更改更好的性能，这就更加验证了相对位置信息在序列建模中的重要性。</p>
 <!-- 因此，在后续的讨论快速矩阵乘法时，我们指的是及$\mathbf T\mathbf x$，其中$\mathbf T\in \mathbb R^{n\times n}, \mathbf x \in \mathbb R^{n\times 1}$。 -->
 
 <h1 id="tnn_1">TNN的实现</h1>
 <h2 id="_4">准备工作</h2>
 <p>接下来的问题就是如何实现TNN，在此之前，我们对之前的公式做一定的调整。</p>
-<p>在之前的讨论中，我们提到了<span class="arithmatex">\(\mathbf T \mathbf X\)</span>可以高效实现，其中<span class="arithmatex">\(\mathbf T\in \mathbb R^{n\times n}, \mathbf X \in \mathbb R^{n\times d}\)</span>，这种情况相当于每个channel共享同一个Toeplitz matrix，但是注意到我们可以让不同的channel使用不同的Toeplitz matrix，我们经验上发现，这样一定程度上可以增大模型的表达性，所以在TNN中，<strong>每个channel</strong>使用了不同的Toeplitz matrix。注意到形状为<span class="arithmatex">\(n\times n\)</span>的Toeplitz matrix实际上只有<span class="arithmatex">\(2n-1\)</span>个独立元素，为了方便后续讨论，我们定义如下映射：<span class="arithmatex">\(f: \mathbb R^{(2n-1)\times 1} \to \mathbb R^{n\times n}\)</span>：
-$$
+<p>在之前的讨论中，我们提到了$\mathbf T \mathbf X$可以高效实现，其中$\mathbf T\in \mathbb R^{n\times n}, \mathbf X \in \mathbb R^{n\times d}$，这种情况相当于每个channel共享同一个Toeplitz matrix，但是注意到我们可以让不同的channel使用不同的Toeplitz matrix，我们经验上发现，这样一定程度上可以增大模型的表达性，所以在TNN中，<strong>每个channel</strong>使用了不同的Toeplitz matrix。注意到形状为$n\times n$的Toeplitz matrix实际上只有$2n-1$个独立元素，为了方便后续讨论，我们定义如下映射：$f: \mathbb R^{(2n-1)\times 1} \to \mathbb R^{n\times n}$：
+<script type="math/tex; mode=display">
 f(\mathbf t)=f(t_{-n+1},\ldots, t_{n-1}) =\left[\begin{matrix}
-t_0 &amp; t_{-1} &amp; \cdots  &amp; t_{-n+1} \
-t_1 &amp; t_0  &amp;  &amp;  \vdots \
-\vdots &amp;   &amp;   t_0 &amp; t_{-1} \
-t_{n-1} &amp; \ldots  &amp; t_1 &amp; t_0
+t_0 & t_{-1} & \cdots  & t_{-n+1} \\
+t_1 & t_0  &  &  \vdots \\
+\vdots &   &   t_0 & t_{-1} \\
+t_{n-1} & \ldots  & t_1 & t_0
 \end{matrix}\right] \in \mathbb R^{n\times n}.
-$$
-该映射的作用是将维度为<span class="arithmatex">\((2n-1)\times 1\)</span>的向量填充为<span class="arithmatex">\(n\times n\)</span>的Toeplitz matrix。</p>
+</script>
+该映射的作用是将维度为$(2n-1)\times 1$的向量填充为$n\times n$的Toeplitz matrix。</p>
 <p>结合之前的记号，我们定义为Tno算子(Toeplitz neural operator)为：
-$$
-\mathrm{Tno}: \mathbb R^{(2n-1)\times d}\times \mathbb R^{n\times d} \to \mathbb R^{n\times d},\
-\mathbf O= \mathrm{Tno}(\mathbf T, \mathbf X), \
+<script type="math/tex; mode=display">
+\mathrm{Tno}: \mathbb R^{(2n-1)\times d}\times \mathbb R^{n\times d} \to \mathbb R^{n\times d},\\
+\mathbf O= \mathrm{Tno}(\mathbf T, \mathbf X), \\
 \mathbf O[:, i]= f(\mathbf T[:, i]) \mathbf X[:, i].
-$$</p>
-<p>备注：这里的记号<span class="arithmatex">\(\mathbf T\in \mathbb R^{(2n-1)\times d}\)</span>和一开始含义有所不同，注意不要搞混。</p>
+</script>
+</p>
+<p>备注：这里的记号$\mathbf T\in \mathbb R^{(2n-1)\times d}$和一开始含义有所不同，注意不要搞混。</p>
 <p>在开始正式的实现之前，我们先引入一些必要的依赖库以及一些辅助函数：</p>
 <!-- ，写成计算公式即为：
 $$
@@ -260,7 +262,7 @@ def get_activation_fn(activation):
 </code></pre>
 <h2 id="tno">Tno的实现</h2>
 <h3 id="naive">Naive实现</h3>
-<p>最朴素的实现自然是利用定义进行实现，例如如下代码中，我们使用4重循环，外面两重循环遍历batch, channel维度，第三重循环遍历输出位置，最后一重循环遍历求和项，注意到我们的<span class="arithmatex">\(\mathbf T[:, i]\)</span>输入形式为<span class="arithmatex">\(t_{-n+1}, ... , t_{-1}, t_0, t_1, ... , t_{n - 1}\)</span>，第三重循环遍历到<span class="arithmatex">\(i\)</span>时，涉及的<span class="arithmatex">\(t\)</span>为<span class="arithmatex">\(t_{i}, t_{i-1},\ldots, t_{i-n+1}\)</span>，而<span class="arithmatex">\(n - 1 + i\)</span>是<span class="arithmatex">\(t_{i}\)</span>在<span class="arithmatex">\(\mathbf T[:, i]\)</span>的实际索引：</p>
+<p>最朴素的实现自然是利用定义进行实现，例如如下代码中，我们使用4重循环，外面两重循环遍历batch, channel维度，第三重循环遍历输出位置，最后一重循环遍历求和项，注意到我们的$\mathbf T[:, i]$输入形式为$t_{-n+1}, ... , t_{-1}, t_0, t_1, ... , t_{n - 1}$，第三重循环遍历到$i$时，涉及的$t$为$t_{i}, t_{i-1},\ldots, t_{i-n+1}$，而$n - 1 + i$是$t_{i}$在$\mathbf T[:, i]$的实际索引：</p>
 <pre><code class="language-python">def tno_naive(x, t):
     # x: (b, n, d)
     # t: (2n - 1, d), t_(-(n - 1)), ... , t_(-1), t_0, t_1, ... , t_(n - 1) 
@@ -274,9 +276,9 @@ def get_activation_fn(activation):
 
     return o
 </code></pre>
-<p>这种实现显然太低效，但是至少我们有了一个正确的版本，这对我们后续改进算法也是有帮助的，不难看出这样计算的时间复杂度为<span class="arithmatex">\(O(n^2d)\)</span>，空间复杂度为<span class="arithmatex">\(O(nd)\)</span>（忽略batch维度）。                             </p>
+<p>这种实现显然太低效，但是至少我们有了一个正确的版本，这对我们后续改进算法也是有帮助的，不难看出这样计算的时间复杂度为$O(n^2d)$，空间复杂度为$O(nd)$（忽略batch维度）。                             </p>
 <h3 id="matrix-production">Matrix production实现</h3>
-<p>第二种实现是并行版本，其思路就是先构造Toeplitz matrix，然后利用矩阵乘法进行计算。最主要的部分是将映射<span class="arithmatex">\(f\)</span>实现出来，代码基于<a href="https://stackoverflow.com/questions/69809789/is-there-any-way-to-create-a-tensor-with-a-specific-pattern-in-pytorch">此处</a>，主要思路是先将输入改写为<span class="arithmatex">\(t_0, t_{-1}, ... , t_{1-n}, t_{n - 1}, ... , t_1\)</span>，然后构造index <span class="arithmatex">\(0, 1, \ldots,n -1, -(n - 1), ..., -1\)</span>，将输入映射到Toeplitz matrix，最后得到Toeplitz matrix进行矩阵乘法：</p>
+<p>第二种实现是并行版本，其思路就是先构造Toeplitz matrix，然后利用矩阵乘法进行计算。最主要的部分是将映射$f$实现出来，代码基于<a href="https://stackoverflow.com/questions/69809789/is-there-any-way-to-create-a-tensor-with-a-specific-pattern-in-pytorch">此处</a>，主要思路是先将输入改写为$t_0, t_{-1}, ... , t_{1-n}, t_{n - 1}, ... , t_1$，然后构造index $0, 1, \ldots,n -1, -(n - 1), ..., -1$，将输入映射到Toeplitz matrix，最后得到Toeplitz matrix进行矩阵乘法：</p>
 <pre><code class="language-python">def tno_matrix(x, t):
     # x: (b, n, d)
     # t: (2n - 1, d), t_(-(n - 1)), ... , t_(-1), t_0, t_1, ... , t_(n - 1) 
@@ -294,50 +296,50 @@ def get_activation_fn(activation):
 
     return o
 </code></pre>
-<p>这种实现的好处是可以利用矩阵乘法，尽管复杂度依然为<span class="arithmatex">\(O(n^2d)\)</span>，但实际效率会快很多；但是由于要构造Toeplitz matrix，所以空间复杂度为<span class="arithmatex">\(O(n^2d)\)</span>，并且这部分还是一个很大的IO开销，所以实际中的速度并不会很快。</p>
+<p>这种实现的好处是可以利用矩阵乘法，尽管复杂度依然为$O(n^2d)$，但实际效率会快很多；但是由于要构造Toeplitz matrix，所以空间复杂度为$O(n^2d)$，并且这部分还是一个很大的IO开销，所以实际中的速度并不会很快。</p>
 <h3 id="fft">FFT实现</h3>
 <p>有了之前的铺垫，可以看出前两种方法无论是时间复杂度和空间复杂度相比Attention并没有什么优势，那么有没有办法解决这点呢？回答是肯定的，这就需要<a href="">FFT</a>这把利刃。后续的讨论涉及到一些数学知识，这里先高度概括一下思路：
 1. 给出Circulant matrix的快速矩阵乘法算法；
 2. 建立Toeplitz marix和Circulant matrix的关系；</p>
 <h3 id="circulant-matrix">Circulant matrix</h3>
 <h4 id="_5">定义</h4>
-<p>矩阵<span class="arithmatex">\(\mathbf C\in \mathbb R^{n\times n}\)</span>是一个<a href="https://en.wikipedia.org/wiki/Circulant_matrix">Circulant matrix</a>当且仅当<span class="arithmatex">\(\mathbf C_{ij}= c_{(i-j + n )\bmod n}\)</span> ,即：
-$$
+<p>矩阵$\mathbf C\in \mathbb R^{n\times n}$是一个<a href="https://en.wikipedia.org/wiki/Circulant_matrix">Circulant matrix</a>当且仅当$\mathbf C_{ij}= c_{(i-j + n )\bmod n}$ ,即：
+<script type="math/tex; mode=display">
 \mathbf C=\left[\begin{matrix}
-c_0 &amp; c_{n-1} &amp;c_{n-2} &amp; \cdots &amp; \cdots &amp; c_{1} \
-c_1 &amp; c_0 &amp; c_{n-1} &amp; \ddots &amp; &amp; \vdots \
-c_2 &amp; c_1 &amp; \ddots &amp; \ddots &amp; \ddots &amp; \vdots \
-\vdots &amp; \ddots &amp; \ddots &amp; \ddots &amp; c_{n-1} &amp; c_{n-2} \
-\vdots &amp; &amp; \ddots &amp; c_1 &amp; c_0 &amp; c_{n-1} \
-c_{n-1} &amp; \ldots &amp; \ldots &amp; c_2 &amp; c_1 &amp; c_0
+c_0 & c_{n-1} &c_{n-2} & \cdots & \cdots & c_{1} \\
+c_1 & c_0 & c_{n-1} & \ddots & & \vdots \\
+c_2 & c_1 & \ddots & \ddots & \ddots & \vdots \\
+\vdots & \ddots & \ddots & \ddots & c_{n-1} & c_{n-2} \\
+\vdots & & \ddots & c_1 & c_0 & c_{n-1} \\
+c_{n-1} & \ldots & \ldots & c_2 & c_1 & c_0
 \end{matrix}\right] \in \mathbb R^{n\times n}.
-$$
+</script>
 关于Circulant matrix，有如下重要性质：</p>
-<p>Circulant matrix <span class="arithmatex">\(\mathbf C\in \mathbb R^{n\times n}\)</span>正交相似于对角阵<span class="arithmatex">\(\mathbf \Lambda\)</span>，特别地，相似矩阵<span class="arithmatex">\(\mathbf F\)</span>是<span class="arithmatex">\(n\times n\)</span> DFT矩阵:
-$$
-\mathbf C = \mathbf F^{\top} \Lambda \mathbf F, \
-\Lambda = \mathrm{diag}{\mathbf F[c_0,c_1,\ldots, c_{n-1}]^\top} \in \mathbb R^{n\times n}, 
+<p>Circulant matrix $\mathbf C\in \mathbb R^{n\times n}$正交相似于对角阵$\mathbf \Lambda$，特别地，相似矩阵$\mathbf F$是$n\times n$ DFT矩阵:
+<script type="math/tex; mode=display">
+\mathbf C = \mathbf F^{\top} \Lambda \mathbf F, \\
+\Lambda = \mathrm{diag}\{\mathbf F[c_0,c_1,\ldots, c_{n-1}]^\top\} \in \mathbb R^{n\times n}, 
 {\mathbf F}_{st}= \exp\left(\frac{2\pi st i}{n}\right),i^2=-1.
-$$
+</script>
 证明可以参考<a href="https://ee.stanford.edu/~gray/toeplitz.pdf">这里</a>。</p>
 <h4 id="_6">快速矩阵乘法</h4>
-<p>现在考虑matrix-vector production操作<span class="arithmatex">\(\mathbf M \mathbf x, \mathbf M\in \mathbb R^{n\times n}, \mathbf x\in \mathbb R^{n\times 1}\)</span>，那么：</p>
+<p>现在考虑matrix-vector production操作$\mathbf M \mathbf x, \mathbf M\in \mathbb R^{n\times n}, \mathbf x\in \mathbb R^{n\times 1}$，那么：</p>
 <ul>
-<li>如果<span class="arithmatex">\(\mathbf M\)</span>为一般的矩阵，那么该计算的时间复杂度为<span class="arithmatex">\(O(n^2)\)</span>;</li>
-<li>如果<span class="arithmatex">\(\mathbf M\)</span>为DFT矩阵，那么该计算的时间复杂度为<span class="arithmatex">\(O(n \log n)\)</span>;</li>
+<li>如果$\mathbf M$为一般的矩阵，那么该计算的时间复杂度为$O(n^2)$;</li>
+<li>如果$\mathbf M$为DFT矩阵，那么该计算的时间复杂度为$O(n \log n)$;</li>
 </ul>
-<p>基于上述事实，考虑<span class="arithmatex">\(\mathbf M=\mathbf C\)</span>为Circulant matrix的情形，那么：
-$$
+<p>基于上述事实，考虑$\mathbf M=\mathbf C$为Circulant matrix的情形，那么：
+<script type="math/tex; mode=display">
 \mathbf C \mathbf x = \mathbf F^{\top} \Lambda \mathbf F \mathbf x.
-$$
+</script>
 该计算可以分解为几个步骤：</p>
 <ul>
-<li><span class="arithmatex">\(\mathbf x_{\mathrm{fft}}=\mathbf{Fx}\)</span>；</li>
-<li><span class="arithmatex">\(\mathbf c_{\mathrm{fft}}=\mathbf F[c_0,c_1,\ldots, c_{n-1}]^\top\)</span>；</li>
-<li><span class="arithmatex">\(\mathbf o_{\mathrm{fft}}=\mathbf x_{\mathrm{fft}}\odot \mathbf c_{\mathrm{fft}}\)</span>；</li>
-<li><span class="arithmatex">\(\mathbf o= \mathbf F^{\top} \mathbf o_{\mathrm{fft}}\)</span>；</li>
+<li>$\mathbf x_{\mathrm{fft}}=\mathbf{Fx}$；</li>
+<li>$\mathbf c_{\mathrm{fft}}=\mathbf F[c_0,c_1,\ldots, c_{n-1}]^\top$；</li>
+<li>$\mathbf o_{\mathrm{fft}}=\mathbf x_{\mathrm{fft}}\odot \mathbf c_{\mathrm{fft}}$；</li>
+<li>$\mathbf o= \mathbf F^{\top} \mathbf o_{\mathrm{fft}}$；</li>
 </ul>
-<p>其中<span class="arithmatex">\(\odot\)</span>表示element-wise production，可以看出，算法的总时间复杂度为<span class="arithmatex">\(O(n\log n)\)</span>，空间复杂度为<span class="arithmatex">\(O(n)\)</span>，所以Circulant matrix对应的矩阵乘法是高效的。</p>
+<p>其中$\odot$表示element-wise production，可以看出，算法的总时间复杂度为$O(n\log n)$，空间复杂度为$O(n)$，所以Circulant matrix对应的矩阵乘法是高效的。</p>
 <h4 id="_7">实现</h4>
 <p>有了之前的说明，不难利用<code>fft</code>实现上述计算：</p>
 <pre><code class="language-python">def circulant_fft(x, c):
@@ -356,91 +358,93 @@ $$
 <p>现在我们已经有了一个关于Circulant matrix的高效矩阵乘法，那么下一个问题就是建立Toeplitz matrix和Circulant matrix的关系。</p>
 <h3 id="toeplitz-matrix">Toeplitz matrix</h3>
 <h4 id="_9">定义</h4>
-<p>矩阵<span class="arithmatex">\(\mathbf T\in \mathbb R^{n\times n}\)</span>是一个Toeplitz matrix当且仅当<span class="arithmatex">\(\mathbf T_{ij}= t_{i-j}\)</span>，即
-$$
+<p>矩阵$\mathbf T\in \mathbb R^{n\times n}$是一个Toeplitz matrix当且仅当$\mathbf T_{ij}= t_{i-j}$，即
+<script type="math/tex; mode=display">
 \mathbf T=\left[\begin{matrix}
-t_0 &amp; t_{-1} &amp;t_{-2} &amp; \cdots &amp; \cdots &amp; t_{-n+1} \
-t_1 &amp; t_0 &amp; t_{-1} &amp; \ddots &amp; &amp; \vdots \
-t_2 &amp; t_1 &amp; \ddots &amp; \ddots &amp; \ddots &amp; \vdots \
-\vdots &amp; \ddots &amp; \ddots &amp; \ddots &amp; t_{-1} &amp; t_{n-2} \
-\vdots &amp; &amp; \ddots &amp; t_1 &amp; t_0 &amp; t_{-1} \
-t_{n-1} &amp; \ldots &amp; \ldots &amp; t_2 &amp; t_1 &amp; t_0
+t_0 & t_{-1} &t_{-2} & \cdots & \cdots & t_{-n+1} \\
+t_1 & t_0 & t_{-1} & \ddots & & \vdots \\
+t_2 & t_1 & \ddots & \ddots & \ddots & \vdots \\
+\vdots & \ddots & \ddots & \ddots & t_{-1} & t_{n-2} \\
+\vdots & & \ddots & t_1 & t_0 & t_{-1} \\
+t_{n-1} & \ldots & \ldots & t_2 & t_1 & t_0
 \end{matrix}\right] \in \mathbb R^{n\times n}.
-$$
-从形式上来看，Toeplitz matrix和Circulant matrix非常像，唯一的区别在于前者的独立元素数量为<span class="arithmatex">\(2n-1\)</span>，后者的独立元素数量为<span class="arithmatex">\(n\)</span>，那么一个简单的思路就是将Toeplitz matrix嵌入到一个阶数大于等于<span class="arithmatex">\(2n-1\)</span>矩阵中，而这个矩阵本生是一个Circulant matrix，下面来看下这是如何具体操作的。</p>
-<p>可以将Toeplitz matrix <span class="arithmatex">\(\mathbf T\in \mathbb R^{n\times }\)</span>嵌入到Circulant matrix <span class="arithmatex">\(\mathbf C \in \mathbb R^{2n\times 2n}\)</span>中:
-$$
+</script>
+从形式上来看，Toeplitz matrix和Circulant matrix非常像，唯一的区别在于前者的独立元素数量为$2n-1$，后者的独立元素数量为$n$，那么一个简单的思路就是将Toeplitz matrix嵌入到一个阶数大于等于$2n-1$矩阵中，而这个矩阵本生是一个Circulant matrix，下面来看下这是如何具体操作的。</p>
+<p>可以将Toeplitz matrix $\mathbf T\in \mathbb R^{n\times }$嵌入到Circulant matrix $\mathbf C \in \mathbb R^{2n\times 2n}$中:
+<script type="math/tex; mode=display">
 c_{k} =\begin{cases}
-t_k , 0 \le k \le n - 1\
-t_0 , k=n\
+t_k , 0 \le k \le n - 1\\
+t_0 , k=n\\
 t_{k -2n},   n+1\le k \le 2n-1
 \end{cases} ,
-$$
+</script>
 即，
-$$
+<script type="math/tex; mode=display">
 \mathbf C=\left[\begin{array}{ccccc|ccccc}
-t_0 &amp; t_{-1} &amp; \ldots &amp; \ldots &amp; t_{-n+1} &amp; t_0 &amp; t_{n-1} &amp; \ldots &amp; t_2 &amp; t_1 \
-t_1 &amp; t_0 &amp; \ddots &amp; &amp; \vdots &amp; t_{-n+1} &amp; \ddots &amp; \ddots &amp; &amp; t_2 \
-t_2 &amp; \ddots &amp; \ddots &amp; \ddots &amp; \vdots &amp; \vdots &amp; \ddots &amp; &amp; \ddots &amp; \vdots \
-\vdots &amp; &amp; \ddots &amp; t_0 &amp; t_{-1} &amp; t_{-2} &amp; &amp; \ddots &amp; \ddots &amp; t_{n-1} \
-t_{n-1} &amp; \ldots &amp; \ldots &amp; t_1 &amp; t_0 &amp; t_{-1} &amp; t_{-2} &amp; \ldots &amp; t_{-n+1} &amp; t_0 \
-\hline t_0 &amp; t_{n-1} &amp; \ldots &amp; \ldots &amp; t_1 &amp; t_0 &amp; t_{-1} &amp; \ldots &amp; \ldots &amp; t_{-n+1} \
-t_{-n+1} &amp; \ddots &amp; \ddots &amp; &amp; t_2 &amp; t_1 &amp; t_0 &amp; \ddots &amp; &amp; \vdots \
-\vdots &amp; \ddots &amp; &amp; \ddots &amp; \vdots &amp; t_2 &amp; \ddots &amp; \ddots &amp; \ddots &amp; \vdots \
-t_{-2} &amp; &amp; \ddots &amp; \ddots &amp; t_{n-1} &amp; \vdots &amp; &amp; \ddots &amp; t_0 &amp; t_{-1} \
-t_{-1} &amp; t_{-2} &amp; \ldots &amp; \ldots &amp; t_0 &amp; t_{n-1} &amp; \ldots &amp; \ldots &amp; t_1 &amp; t_0
+t_0 & t_{-1} & \ldots & \ldots & t_{-n+1} & t_0 & t_{n-1} & \ldots & t_2 & t_1 \\
+t_1 & t_0 & \ddots & & \vdots & t_{-n+1} & \ddots & \ddots & & t_2 \\
+t_2 & \ddots & \ddots & \ddots & \vdots & \vdots & \ddots & & \ddots & \vdots \\
+\vdots & & \ddots & t_0 & t_{-1} & t_{-2} & & \ddots & \ddots & t_{n-1} \\
+t_{n-1} & \ldots & \ldots & t_1 & t_0 & t_{-1} & t_{-2} & \ldots & t_{-n+1} & t_0 \\
+\hline t_0 & t_{n-1} & \ldots & \ldots & t_1 & t_0 & t_{-1} & \ldots & \ldots & t_{-n+1} \\
+t_{-n+1} & \ddots & \ddots & & t_2 & t_1 & t_0 & \ddots & & \vdots \\
+\vdots & \ddots & & \ddots & \vdots & t_2 & \ddots & \ddots & \ddots & \vdots \\
+t_{-2} & & \ddots & \ddots & t_{n-1} & \vdots & & \ddots & t_0 & t_{-1} \\
+t_{-1} & t_{-2} & \ldots & \ldots & t_0 & t_{n-1} & \ldots & \ldots & t_1 & t_0
 \end{array}\right] \in \mathbb R^{2n\times 2n}.
-$$</p>
+</script>
+</p>
 <p>使用分块矩阵的符号，我们可以定义：
-$$
+<script type="math/tex; mode=display">
 \begin{gathered}
  \mathbf C = \left[\begin{matrix}
-\mathbf C_1 &amp; \mathbf C_2\
-\mathbf C_3 &amp; \mathbf C_4\
+\mathbf C_1 & \mathbf C_2\\
+\mathbf C_3 & \mathbf C_4\\
 \end{matrix}\right] \in \mathbb R^{2n\times 2n},\mathbf C_s \in \mathbb R^{n \times n}, s=1,2,3,4,
 \mathbf C_1 = \mathbf T 
 \end{gathered}.
-$$</p>
+</script>
+</p>
 <p>有了上述准备工作，可以得到Toeplitz matrix-vector production的快速算法。</p>
 <h4 id="_10">快速矩阵乘法</h4>
-<p>对于向量<span class="arithmatex">\(\mathbf x\in \mathbb R^{n}\)</span>, 定义:
-$$
+<p>对于向量$\mathbf x\in \mathbb R^{n}$, 定义:
+<script type="math/tex; mode=display">
 \mathbf x_1 = \left[\begin{matrix}
-\mathbf x\
+\mathbf x\\
 \mathbf 0_n
 \end{matrix}\right] \in \mathbb R^{2n},
-$$
+</script>
 所以，
-$$
+<script type="math/tex; mode=display">
 \mathbf C \mathbf x_1 =\left[\begin{matrix}
-\mathbf C_1 &amp; \mathbf C_2\
-\mathbf C_3 &amp; \mathbf C_4\
+\mathbf C_1 & \mathbf C_2\\
+\mathbf C_3 & \mathbf C_4\\
 \end{matrix}\right]\left[\begin{matrix}
-\mathbf x\
+\mathbf x\\
 \mathbf 0_n
 \end{matrix}\right]=\left[\begin{matrix}
-\mathbf C_1 \mathbf x\
+\mathbf C_1 \mathbf x\\
 \mathbf C_3 \mathbf x
 \end{matrix}\right]=\left[\begin{matrix}
-\mathbf T \mathbf x\
+\mathbf T \mathbf x\\
 \mathbf C_3 \mathbf x
 \end{matrix}\right] \in \mathbb R^{2n},
-$$
+</script>
 因此:
-$$
+<script type="math/tex; mode=display">
 \left[\begin{matrix}
-{\mathbf I}<em>n &amp;
-{\mathbf 0}</em>{n\times n}
+{\mathbf I}_n &
+{\mathbf 0}_{n\times n}
 \end{matrix}\right]\mathbf C \mathbf x_1  =
 \left[\begin{matrix}
-\mathbf I_n &amp;
+\mathbf I_n &
 \mathbf 0_{n\times n}
 \end{matrix}\right]\left[\begin{array}{c}
-\mathbf T \mathbf x\
+\mathbf T \mathbf x\\
 \mathbf C_3 \mathbf x
 \end{array}\right]=\mathbf T \mathbf x.
-$$
-关于时间复杂度，注意到我们是将<span class="arithmatex">\(n\times n\)</span>的Toeplitz matrix嵌入到一个<span class="arithmatex">\(2n\times 2n\)</span>的Circulant matrix中，所以时间复杂度仍然为<span class="arithmatex">\(O(n\log n)\)</span>。</p>
+</script>
+关于时间复杂度，注意到我们是将$n\times n$的Toeplitz matrix嵌入到一个$2n\times 2n$的Circulant matrix中，所以时间复杂度仍然为$O(n\log n)$。</p>
 <h4 id="_11">实现</h4>
 <p>和Circulant matrix的情形类似，可以利用<code>fft</code>实现上述计算：</p>
 <pre><code class="language-python">def tno_fft(x, t):
@@ -481,7 +485,7 @@ print(f&quot;The output error between tno_naive and tno_matrix is {torch.norm(o1
 The output error between tno_naive and tno_matrix is 5.38119456905406e-05
 </code></pre>
 <h3 id="_13">补充</h3>
-<p>现在我们已经完成了大部分内容，这里最后补充如何将Tno适配到Autoregressive Language Model(causal)的情形。和Attention类似，只要保证Toeplitz matrix的上三角部分为<span class="arithmatex">\(0\)</span>即可，即：</p>
+<p>现在我们已经完成了大部分内容，这里最后补充如何将Tno适配到Autoregressive Language Model(causal)的情形。和Attention类似，只要保证Toeplitz matrix的上三角部分为$0$即可，即：</p>
 <p>$$
 \mathbf T=\left[\begin{matrix}
 t_0 &amp; 0 &amp; 0 &amp; \cdots &amp; \cdots &amp; 0 \
@@ -501,21 +505,21 @@ $$
 <h3 id="_14">小结</h3>
 <p>在本节中，我们从naive的算法开始，最终得到了一个基于FFT算法的高效实现，并且给出处理单向情形的方案。</p>
 <h2 id="rpe">Rpe的实现</h2>
-<p>注意到Tno的计算涉及到<span class="arithmatex">\(x,t\)</span>，<span class="arithmatex">\(x\)</span>是输入，<span class="arithmatex">\(t\)</span>是相对位置系数，所以下一步就是如何计算<span class="arithmatex">\(t\)</span>。对于序列长度为<span class="arithmatex">\(n\)</span>，特征维度为<span class="arithmatex">\(d\)</span>的模型，我们一共有<span class="arithmatex">\((2n-1)\times d\)</span>个系数，所以接下来的问题就是如何得到这些系数。</p>
+<p>注意到Tno的计算涉及到$x,t$，$x$是输入，$t$是相对位置系数，所以下一步就是如何计算$t$。对于序列长度为$n$，特征维度为$d$的模型，我们一共有$(2n-1)\times d$个系数，所以接下来的问题就是如何得到这些系数。</p>
 <h3 id="naive_1">Naive实现</h3>
-<p>最简单的思路就是直接给模型增加<span class="arithmatex">\((2n-1)\times d\)</span>个参数，但是这样做有几个问题：
-1. 当序列长度<span class="arithmatex">\(n\)</span>比较大的时候，模型参数量会非常多；
-2. 尽管我们有<span class="arithmatex">\((2n-1)\times d\)</span>个系数，但是对于每个channel的<span class="arithmatex">\(2n-1\)</span>个系数，不能完全假设他们是独立的，例如<span class="arithmatex">\(t_1\)</span>和<span class="arithmatex">\(t_{-1}\)</span>必然有内在联系；
+<p>最简单的思路就是直接给模型增加$(2n-1)\times d$个参数，但是这样做有几个问题：
+1. 当序列长度$n$比较大的时候，模型参数量会非常多；
+2. 尽管我们有$(2n-1)\times d$个系数，但是对于每个channel的$2n-1$个系数，不能完全假设他们是独立的，例如$t_1$和$t_{-1}$必然有内在联系；
 3. 无法处理任意长的序列；
    1. 这点可以理解为，当超过最大序列长度时，没有对应的系数，所以模型也没有<a href="https://arxiv.org/abs/2108.12409">外推性</a>；</p>
 <p>那么是否有办法解决这些问题呢？回答是肯定的。</p>
 <h3 id="relative-position-encoder">Relative Position Encoder</h3>
-<p>对于问题１，２，我们利用某种方式参数化这<span class="arithmatex">\((2n-1)\times d\)</span>个参数即可，最简单方式就是使用神经网络，特别的，我们使用的是一个名为Relative Position Encoder(RPE)的网络，网络的输入是1维实数<span class="arithmatex">\(-(n-1), \ldots, (n-1)\)</span>，输出是<span class="arithmatex">\(d\)</span>维特征。在使用时，我们会输入<span class="arithmatex">\([-(n-1),\ldots, (n-1)]^{\top} \in \mathbb R^{2n-1}\)</span>，输出的形状是<span class="arithmatex">\((2n-1)\times d\)</span>。</p>
+<p>对于问题１，２，我们利用某种方式参数化这$(2n-1)\times d$个参数即可，最简单方式就是使用神经网络，特别的，我们使用的是一个名为Relative Position Encoder(RPE)的网络，网络的输入是1维实数$-(n-1), \ldots, (n-1)$，输出是$d$维特征。在使用时，我们会输入$[-(n-1),\ldots, (n-1)]^{\top} \in \mathbb R^{2n-1}$，输出的形状是$(2n-1)\times d$。</p>
 <p>对于问题３，我们现在可以一定程度上解决这个问题，现在只要将相对位置（超出训练时的最大训练长度也可）输入到RPE中，即可得到对应系数。但是这样还远远不够，因为这种方式只是让模型“强行”计算了一个值，为了使得性能正常，我们参考了<a href="https://arxiv.org/abs/2108.12409">Alibi</a>的方案，使用了指数衰减的形式，即：
-$$
-    \bar t_{i-j}=\lambda^{|i-j|} t_{i-j}, 0&lt; \lambda &lt; 1.
-$$
-其中<span class="arithmatex">\(\lambda\)</span>是一个超参，我们在<span class="arithmatex">\(n=512\)</span>时选择<span class="arithmatex">\(\lambda=0.99\)</span>。</p>
+<script type="math/tex; mode=display">
+    \bar t_{i-j}=\lambda^{|i-j|} t_{i-j}, 0< \lambda < 1.
+</script>
+其中$\lambda$是一个超参，我们在$n=512$时选择$\lambda=0.99$。</p>
 <h3 id="relative-position-encoder_1">实现Relative Position Encoder</h3>
 <p>有了之前的讨论，我们给出Relative Position Encoder的实现，本质是就是一个全连接网络，加上归一化和激活函数：</p>
 <pre><code class="language-python">class Rpe(nn.Module):
@@ -712,9 +716,11 @@ $$
 <p>有了之前的铺垫，我们可以介绍Tnn Layer，该模块包含一个Token mixer(GTU)以及一个Channel mixer(GLU)，由于GLU和GTU非常相似，所以我们从GLU开始介绍。</p>
 <h3 id="glu">GLU</h3>
 <p><a href="https://arxiv.org/abs/2002.05202">GLU</a>是利用Gate的形式达到Channel mixing的作用，写成数学公式为：</p>
-<div class="arithmatex">\[
+<p>
+<script type="math/tex; mode=display">
 \mathbf O = [f({\mathbf X} {\mathbf W_1}) \odot ({\mathbf X} {\mathbf W_2})] {\mathbf W_3}.
-\]</div>
+</script>
+</p>
 <p>实现如下：</p>
 <pre><code class="language-python">class GLU(nn.Module):
     def __init__(self, d1, d2, act_fun, fina_act=&quot;None&quot;, dropout=0.0, bias=True):
@@ -743,9 +749,9 @@ $$
 </code></pre>
 <h3 id="gtu">GTU</h3>
 <p>GTU参考了GLU的思路，唯一的不同是在其中一个分支上使用了<code>Tno</code>，并且增加一个激活函数，写成数学公式即为：
-$$
+<script type="math/tex; mode=display">
 \mathbf O = [f({\mathbf X} {\mathbf W_1}) \odot (\mathbf T f({\mathbf X} {\mathbf W_2}))] {\mathbf W_3}.
-$$
+</script>
 实现如下：</p>
 <pre><code class="language-python">class Gtu(nn.Module):
     def __init__(
@@ -956,9 +962,7 @@ $$
             shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
       </script>
       <script src="../js/base.js" defer></script>
-      <script src="../javascripts/mathjax.js" defer></script>
-      <script src="https://polyfill.io/v3/polyfill.min.js?features=es6" defer></script>
-      <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" defer></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS_HTML" defer></script>
       <script src="../search/main.js" defer></script>
 
       <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
