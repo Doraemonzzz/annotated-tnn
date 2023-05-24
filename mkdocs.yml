@@ -1,16 +1,8 @@
 site_name: The Annotated Tnn
 theme:
-    name: bootstrap4
+    name: material
+    # name: bootstrap4
 markdown_extensions:
     - mdx_math
-
 extra_javascript:
     - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS_HTML
-# markdown_extensions:
-#   - pymdownx.arithmatex:
-#       generic: true
-
-# extra_javascript:
-#   - javascripts/mathjax.js
-#   - https://polyfill.io/v3/polyfill.min.js?features=es6
-#   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
