@@ -4,7 +4,6 @@
 <center>
 <p><a href="https://openreview.net/pdf?id=IxmWsm4xrua">Toeplitz Neural Network for Sequence Modeling</a></p>
 </center>
-
 <img src="images/network.png" width="100%"/>
 
 *博客由[Doreamonzzz](https://github.com/Doraemonzzz)撰写。*
@@ -20,8 +19,8 @@ Toeplitz Neural Network(TNN)是一种全新的网络结构，以一种完全不�
 1. 了解TNN的动机和设计理念；
 2. 掌握TNN各个部件的实现；
 <!-- 3. 学习如何将TNN应用在$n$维序列建模任务；
-4. 了解TNN的优缺点；
-5. 了解TNN和S4, RWKV等方法的联系； -->
+1. 了解TNN的优缺点；
+2. 了解TNN和S4, RWKV等方法的联系； -->
 
 总而言之，在阅读完本博客之后，您将成为TNN的专家，并且可以将TNN应用到您的项目中，让我们开始吧。
 
@@ -361,7 +360,6 @@ t_{-2} & & \ddots & \ddots & t_{n-1} & \vdots & & \ddots & t_0 & t_{-1} \\
 t_{-1} & t_{-2} & \ldots & \ldots & t_0 & t_{n-1} & \ldots & \ldots & t_1 & t_0
 \end{array}\right] \in \mathbb R^{2n\times 2n}.
 $$
-
 使用分块矩阵的符号，我们可以定义：
 $$
 \begin{gathered}
@@ -372,7 +370,6 @@ $$
 \mathbf C_1 = \mathbf T 
 \end{gathered}.
 $$
-
 有了上述准备工作，可以得到Toeplitz matrix-vector production的快速算法。
 
 #### 快速矩阵乘法
@@ -466,7 +463,6 @@ print(f"The output error between tno_naive and tno_matrix is {torch.norm(o1 - o3
 
 ### 补充
 现在我们已经完成了大部分内容，这里最后补充如何将Tno适配到Autoregressive Language Model(causal)的情形。和Attention类似，只要保证Toeplitz matrix的上三角部分为$0$即可，即：
-
 $$
 \mathbf T=\left[\begin{matrix}
 t_0 & 0 & 0 & \cdots & \cdots & 0 \\
@@ -722,11 +718,9 @@ class Tno(nn.Module):
 
 ### GLU
 [GLU](https://arxiv.org/abs/2002.05202)是利用Gate的形式达到Channel mixing的作用，写成数学公式为：
-
 $$
 \mathbf O = [f({\mathbf X} {\mathbf W_1}) \odot ({\mathbf X} {\mathbf W_2})] {\mathbf W_3}.
 $$
-
 实现如下：
 
 
