@@ -463,6 +463,7 @@ print(f"The output error between tno_naive and tno_matrix is {torch.norm(o1 - o3
 
 #### 补充
 现在我们已经完成了大部分内容，这里最后补充如何将Tno适配到Autoregressive Language Model(causal)的情形。和Attention类似，只要保证Toeplitz matrix的上三角部分为$0$即可，即：
+
 $$
 \mathbf T=\left[\begin{matrix}
 t_0 & 0 & 0 & \cdots & \cdots & 0 \\
@@ -474,6 +475,7 @@ t_2 & t_1 & \ddots & \ddots & \ddots & \vdots \\
 t_{n-1} & \ldots & \ldots & t_2 & t_1 & t_0
 \end{matrix}\right] \in \mathbb R^{n\times n}.
 $$
+
 在实现时，注意到`fft`是zero padding，所以只需要将输入：
 ```python
 t2 = torch.cat([t_zero, t_pos, t_zero, t_neg], dim=0).cuda()
