@@ -4,7 +4,7 @@
 <center>
 <p><a href="https://openreview.net/pdf?id=IxmWsm4xrua">Toeplitz Neural Network for Sequence Modeling</a></p>
 </center>
-<img src="images/network.png" width="100%"/>
+<img src="../images/network.png" width="100%"/>
 
 *博客由[Doreamonzzz](https://github.com/Doraemonzzz)撰写。*
 
