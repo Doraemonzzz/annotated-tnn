@@ -219,47 +219,9 @@
         
       
       
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Zh
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
       <a href="./" class="md-nav__link md-nav__link--active">
         Zh
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#token-mixing-and-channel-mixing" class="md-nav__link">
-    Token mixing and channel mixing
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    相对位置编码
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
       
     </li>
   
@@ -284,28 +246,6 @@
   
     
   
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#token-mixing-and-channel-mixing" class="md-nav__link">
-    Token mixing and channel mixing
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    相对位置编码
-  </a>
-  
-</li>
-      
-    </ul>
   
 </nav>
                   </div>
@@ -338,44 +278,50 @@
 2. 了解TNN和S4, RWKV等方法的联系； -->
 
 <p>总而言之，在阅读完本博客之后，您将成为TNN的专家，并且可以将TNN应用到您的项目中，让我们开始吧。</p>
-<!-- # 目录
-
-- [目录](#目录)
-- [预备知识](#预备知识)
-  - [Token mixing and channel mixing](#token-mixing-and-channel-mixing)
-  - [相对位置编码](#相对位置编码)
-- [TNN的动机](#tnn的动机)
-- [TNN的实现](#tnn的实现)
-  - [准备工作](#准备工作)
-  - [Tno的实现](#tno的实现)
-    - [Naive实现](#naive实现)
-    - [Matrix production实现](#matrix-production实现)
-    - [FFT实现](#fft实现)
-    - [Circulant matrix](#circulant-matrix)
-      - [定义](#定义)
-      - [快速矩阵乘法](#快速矩阵乘法)
-      - [实现](#实现)
-      - [小结](#小结)
-    - [Toeplitz matrix](#toeplitz-matrix)
-      - [定义](#定义-1)
-      - [快速矩阵乘法](#快速矩阵乘法-1)
-      - [实现](#实现-1)
-    - [验证实现](#验证实现)
-    - [补充](#补充)
-    - [小结](#小结-1)
-  - [Rpe的实现](#rpe的实现)
-    - [Naive实现](#naive实现-1)
-    - [Relative Position Encoder](#relative-position-encoder)
-    - [实现Relative Position Encoder](#实现relative-position-encoder)
-    - [将Tno和Rpe合并](#将tno和rpe合并)
-  - [Tnn layer的实现](#tnn-layer的实现)
-    - [GLU](#glu)
-    - [GTU](#gtu)
-    - [TnnLayer](#tnnlayer)
-    - [小结](#小结-2)
-- [全文总结](#全文总结) -->
-
-<h1 id="_1">预备知识<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<h1 id="_1">目录<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<ul>
+<li><a href="#目录">目录</a></li>
+<li><a href="#预备知识">预备知识</a></li>
+<li><a href="#token-mixing-and-channel-mixing">Token mixing and channel mixing</a></li>
+<li><a href="#相对位置编码">相对位置编码</a></li>
+<li><a href="#tnn的动机">TNN的动机</a></li>
+<li><a href="#tnn的实现">TNN的实现</a></li>
+<li><a href="#准备工作">准备工作</a></li>
+<li><a href="#tno的实现">Tno的实现</a><ul>
+<li><a href="#naive实现">Naive实现</a></li>
+<li><a href="#matrix-production实现">Matrix production实现</a></li>
+<li><a href="#fft实现">FFT实现</a></li>
+<li><a href="#circulant-matrix">Circulant matrix</a></li>
+<li><a href="#定义">定义</a></li>
+<li><a href="#快速矩阵乘法">快速矩阵乘法</a></li>
+<li><a href="#实现">实现</a></li>
+<li><a href="#小结">小结</a></li>
+<li><a href="#toeplitz-matrix">Toeplitz matrix</a></li>
+<li><a href="#定义-1">定义</a></li>
+<li><a href="#快速矩阵乘法-1">快速矩阵乘法</a></li>
+<li><a href="#实现-1">实现</a></li>
+<li><a href="#验证实现">验证实现</a></li>
+<li><a href="#补充">补充</a></li>
+<li><a href="#小结-1">小结</a></li>
+</ul>
+</li>
+<li><a href="#rpe的实现">Rpe的实现</a><ul>
+<li><a href="#naive实现-1">Naive实现</a></li>
+<li><a href="#relative-position-encoder">Relative Position Encoder</a></li>
+<li><a href="#实现relative-position-encoder">实现Relative Position Encoder</a></li>
+<li><a href="#将tno和rpe合并">将Tno和Rpe合并</a></li>
+</ul>
+</li>
+<li><a href="#tnn-layer的实现">Tnn layer的实现</a><ul>
+<li><a href="#glu">GLU</a></li>
+<li><a href="#gtu">GTU</a></li>
+<li><a href="#tnnlayer">TnnLayer</a></li>
+<li><a href="#小结-2">小结</a></li>
+</ul>
+</li>
+<li><a href="#全文总结">全文总结</a></li>
+</ul>
+<h1 id="_2">预备知识<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h1>
 <h2 id="token-mixing-and-channel-mixing">Token mixing and channel mixing<a class="headerlink" href="#token-mixing-and-channel-mixing" title="Permanent link">&para;</a></h2>
 <p>让我们首先从Transformer开始。Transformer作为一个网络结构已经席卷了各个领域，其核心部分主要可以由如下两个计算公式描述：
 <script type="math/tex; mode=display">
@@ -391,7 +337,7 @@
 - $\mathbf X  \mathbf B$表示矩阵$\mathbf X$列的线性组合，而每一列表示一个channel，即channel的线性组合，所以称为channel mixing；</p>
 <p>在Transformer中，矩阵$\mathbf A$即为$\mathrm{Softmax}(\mathbf Q \mathbf K^{\top} /\sqrt{d})$，矩阵$\mathbf B$即为$\mathrm {FFN}$中的全连接层。</p>
 <p>大多数对Transformer的改进都是集中在token mixing:$\mathbf A \mathbf X$的计算上，以各种各样的方式降低其运算复杂度，TNN也是使用了类似的思路，最核心的一点就是利用了相对位置编码，或者说，Toeplitz矩阵。</p>
-<h2 id="_2">相对位置编码<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h2 id="_3">相对位置编码<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
 <p>位置编码是Transformer中的重要组成部分，一开始广为使用的是<a href="https://arxiv.org/abs/1706.03762">绝对位置编码(APE)</a>，这种编码的方式可以用如下计算方式概括：
 <script type="math/tex; mode=display">
 \mathbf x_i =\mathbf w_i + \mathbf p_i.
@@ -432,7 +378,7 @@ t_{n-1} & \ldots  & t_1 & t_0
 <!-- 因此，在后续的讨论快速矩阵乘法时，我们指的是及$\mathbf T\mathbf x$，其中$\mathbf T\in \mathbb R^{n\times n}, \mathbf x \in \mathbb R^{n\times 1}$。 -->
 
 <h1 id="tnn_1">TNN的实现<a class="headerlink" href="#tnn_1" title="Permanent link">&para;</a></h1>
-<h2 id="_3">准备工作<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
+<h2 id="_4">准备工作<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <p>接下来的问题就是如何实现TNN，在此之前，我们对之前的公式做一定的调整。</p>
 <p>在之前的讨论中，我们提到了$\mathbf T \mathbf X$可以高效实现，其中$\mathbf T\in \mathbb R^{n\times n}, \mathbf X \in \mathbb R^{n\times d}$，这种情况相当于每个channel共享同一个Toeplitz matrix，但是注意到我们可以让不同的channel使用不同的Toeplitz matrix，我们经验上发现，这样一定程度上可以增大模型的表达性，所以在TNN中，<strong>每个channel</strong>使用了不同的Toeplitz matrix。注意到形状为$n\times n$的Toeplitz matrix实际上只有$2n-1$个独立元素，为了方便后续讨论，我们定义如下映射：$f: \mathbb R^{(2n-1)\times 1} \to \mathbb R^{n\times n}$：
 <script type="math/tex; mode=display">
@@ -534,7 +480,7 @@ def get_activation_fn(activation):
 1. 给出Circulant matrix的快速矩阵乘法算法；
 2. 建立Toeplitz marix和Circulant matrix的关系；</p>
 <h3 id="circulant-matrix">Circulant matrix<a class="headerlink" href="#circulant-matrix" title="Permanent link">&para;</a></h3>
-<h4 id="_4">定义<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h4>
+<h4 id="_5">定义<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h4>
 <p>矩阵$\mathbf C\in \mathbb R^{n\times n}$是一个<a href="https://en.wikipedia.org/wiki/Circulant_matrix">Circulant matrix</a>当且仅当$\mathbf C_{ij}= c_{(i-j + n )\bmod n}$ ,即：
 <script type="math/tex; mode=display">
 \mathbf C=\left[\begin{matrix}
@@ -554,7 +500,7 @@ c_{n-1} & \ldots & \ldots & c_2 & c_1 & c_0
 {\mathbf F}_{st}= \exp\left(\frac{2\pi st i}{n}\right),i^2=-1.
 </script>
 证明可以参考<a href="https://ee.stanford.edu/~gray/toeplitz.pdf">这里</a>。</p>
-<h4 id="_5">快速矩阵乘法<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h4>
+<h4 id="_6">快速矩阵乘法<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h4>
 <p>现在考虑matrix-vector production操作$\mathbf M \mathbf x, \mathbf M\in \mathbb R^{n\times n}, \mathbf x\in \mathbb R^{n\times 1}$，那么：</p>
 <ul>
 <li>如果$\mathbf M$为一般的矩阵，那么该计算的时间复杂度为$O(n^2)$;</li>
@@ -572,7 +518,7 @@ c_{n-1} & \ldots & \ldots & c_2 & c_1 & c_0
 <li>$\mathbf o= \mathbf F^{\top} \mathbf o_{\mathrm{fft}}$；</li>
 </ul>
 <p>其中$\odot$表示element-wise production，可以看出，算法的总时间复杂度为$O(n\log n)$，空间复杂度为$O(n)$，所以Circulant matrix对应的矩阵乘法是高效的。</p>
-<h4 id="_6">实现<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h4>
+<h4 id="_7">实现<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h4>
 <p>有了之前的说明，不难利用<code>fft</code>实现上述计算：</p>
 <pre><code class="language-python">def circulant_fft(x, c):
     # x: (b, n, d)
@@ -586,10 +532,10 @@ c_{n-1} & \ldots & \ldots & c_2 & c_1 & c_0
 
     return o
 </code></pre>
-<h4 id="_7">小结<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h4>
+<h4 id="_8">小结<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h4>
 <p>现在我们已经有了一个关于Circulant matrix的高效矩阵乘法，那么下一个问题就是建立Toeplitz matrix和Circulant matrix的关系。</p>
 <h3 id="toeplitz-matrix">Toeplitz matrix<a class="headerlink" href="#toeplitz-matrix" title="Permanent link">&para;</a></h3>
-<h4 id="_8">定义<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h4>
+<h4 id="_9">定义<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h4>
 <p>矩阵$\mathbf T\in \mathbb R^{n\times n}$是一个Toeplitz matrix当且仅当$\mathbf T_{ij}= t_{i-j}$，即
 <script type="math/tex; mode=display">
 \mathbf T=\left[\begin{matrix}
@@ -636,7 +582,7 @@ t_{-1} & t_{-2} & \ldots & \ldots & t_0 & t_{n-1} & \ldots & \ldots & t_1 & t_0
 \end{gathered}.
 </script>
 有了上述准备工作，可以得到Toeplitz matrix-vector production的快速算法。</p>
-<h4 id="_9">快速矩阵乘法<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h4>
+<h4 id="_10">快速矩阵乘法<a class="headerlink" href="#_10" title="Permanent link">&para;</a></h4>
 <p>对于向量$\mathbf x\in \mathbb R^{n}$, 定义:
 <script type="math/tex; mode=display">
 \mathbf x_1 = \left[\begin{matrix}
@@ -675,7 +621,7 @@ t_{-1} & t_{-2} & \ldots & \ldots & t_0 & t_{n-1} & \ldots & \ldots & t_1 & t_0
 \end{array}\right]=\mathbf T \mathbf x.
 </script>
 关于时间复杂度，注意到我们是将$n\times n$的Toeplitz matrix嵌入到一个$2n\times 2n$的Circulant matrix中，所以时间复杂度仍然为$O(n\log n)$。</p>
-<h4 id="_10">实现<a class="headerlink" href="#_10" title="Permanent link">&para;</a></h4>
+<h4 id="_11">实现<a class="headerlink" href="#_11" title="Permanent link">&para;</a></h4>
 <p>和Circulant matrix的情形类似，可以利用<code>fft</code>实现上述计算：</p>
 <pre><code class="language-python">def tno_fft(x, t):
     # x: (b, n, d)
@@ -689,7 +635,7 @@ t_{-1} & t_{-2} & \ldots & \ldots & t_0 & t_{n-1} & \ldots & \ldots & t_1 & t_0
 
     return o
 </code></pre>
-<h3 id="_11">验证实现<a class="headerlink" href="#_11" title="Permanent link">&para;</a></h3>
+<h3 id="_12">验证实现<a class="headerlink" href="#_12" title="Permanent link">&para;</a></h3>
 <p>在之前的讨论中，我们给出了Tno的三种实现方式，在本节中，我们将验证这些实现的正确性。</p>
 <pre><code class="language-python">b = 2
 n = 16
@@ -714,7 +660,7 @@ print(f&quot;The output error between tno_naive and tno_matrix is {torch.norm(o1
 <pre><code>The output error between tno_naive and tno_matrix is 2.414959999441635e-05
 The output error between tno_naive and tno_matrix is 5.38119456905406e-05
 </code></pre>
-<h3 id="_12">补充<a class="headerlink" href="#_12" title="Permanent link">&para;</a></h3>
+<h3 id="_13">补充<a class="headerlink" href="#_13" title="Permanent link">&para;</a></h3>
 <p>现在我们已经完成了大部分内容，这里最后补充如何将Tno适配到Autoregressive Language Model(causal)的情形。和Attention类似，只要保证Toeplitz matrix的上三角部分为$0$即可，即：
 $$
 \mathbf T=\left[\begin{matrix}
@@ -732,7 +678,7 @@ $$
 <p>修改为下式即可：</p>
 <pre><code class="language-python">t2 = torch.cat([t_zero, t_pos, t_zero], dim=0).cuda()
 </code></pre>
-<h3 id="_13">小结<a class="headerlink" href="#_13" title="Permanent link">&para;</a></h3>
+<h3 id="_14">小结<a class="headerlink" href="#_14" title="Permanent link">&para;</a></h3>
 <p>在本节中，我们从naive的算法开始，最终得到了一个基于FFT算法的高效实现，并且给出处理单向情形的方案。</p>
 <h2 id="rpe">Rpe的实现<a class="headerlink" href="#rpe" title="Permanent link">&para;</a></h2>
 <p>注意到Tno的计算涉及到$x,t$，$x$是输入，$t$是相对位置系数，所以下一步就是如何计算$t$。对于序列长度为$n$，特征维度为$d$的模型，我们一共有$(2n-1)\times d$个系数，所以接下来的问题就是如何得到这些系数。</p>
@@ -1106,9 +1052,9 @@ $$
 
 </code></pre>
 <p>在使用时，您只需要将TransformerLayer替换成TnnLayer即可。</p>
-<h3 id="_14">小结<a class="headerlink" href="#_14" title="Permanent link">&para;</a></h3>
+<h3 id="_15">小结<a class="headerlink" href="#_15" title="Permanent link">&para;</a></h3>
 <p>在本节中，我们完成了TnnLayer的实现，有了之前的铺垫工作，这一切并不困难。现在，您已经可以将Tnn应用到您的项目中了。</p>
-<h1 id="_15">全文总结<a class="headerlink" href="#_15" title="Permanent link">&para;</a></h1>
+<h1 id="_16">全文总结<a class="headerlink" href="#_16" title="Permanent link">&para;</a></h1>
 <p>通过之前的内容，您应该对TNN有所了解，这里，让我们对全文的核心进行总结：</p>
 <ul>
 <li>Transformer可以分为Token mixing和Channel mixing；</li>
