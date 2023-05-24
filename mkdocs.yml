@@ -4,5 +4,7 @@ theme:
     # name: bootstrap4
 markdown_extensions:
     - mdx_math
+    - toc:
+        permalink: true
 extra_javascript:
     - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS_HTML
