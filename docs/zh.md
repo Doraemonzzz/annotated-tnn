@@ -104,12 +104,12 @@ $$
 $$
 \begin{aligned}
 \mathbf S & = \mathbf Q \mathbf K^{\top} / \sqrt {d} + \mathbf T,\\
-\mathbf T & =\left[\begin{array}{cccc}
+\mathbf T & =\left[\begin{matrix}
 t_0 & t_{-1} & \cdots  & t_{-n+1} \\
 t_1 & t_0  &  &  \vdots \\
 \vdots &   &   t_0 & t_{-1} \\
 t_{n-1} & \ldots  & t_1 & t_0
-\end{array}\right] \in \mathbb R^{n\times n}.
+\end{matrix}\right] \in \mathbb R^{n\times n}.
 \end{aligned}
 $$
 
@@ -126,7 +126,7 @@ $$
 1. 完全可以只依赖于相对位置信息进行token mixing；
 2. 由于矩阵的特殊性，可以将运算复杂度由$O(n^2 d)$降低为$O(nd\log n)$；
 
-可以看到，我们的动机极其简单和优雅，最核心的思路就是将$\mathrm{Softmax}(\mathbf Q \mathbf K^{\top} / \sqrt {d}) $替换为$\mathbf T$，但是，这种简单的替换就可以拥有比各种花哨更改更好的性能，这就更加验证了相对位置信息在序列建模中的重要性。
+可以看到，我们的动机极其简单和优雅，最核心的思路就是将$\mathrm{Softmax}(\mathbf Q \mathbf K^{\top} / \sqrt {d})$替换为$\mathbf T$，但是，这种简单的替换就可以拥有比各种花哨更改更好的性能，这就更加验证了相对位置信息在序列建模中的重要性。
 
 
 <!-- 因此，在后续的讨论快速矩阵乘法时，我们指的是及$\mathbf T\mathbf x$，其中$\mathbf T\in \mathbb R^{n\times n}, \mathbf x \in \mathbb R^{n\times 1}$。 -->
@@ -140,12 +140,12 @@ $$
 
 在之前的讨论中，我们提到了$\mathbf T \mathbf X$可以高效实现，其中$\mathbf T\in \mathbb R^{n\times n}, \mathbf X \in \mathbb R^{n\times d}$，这种情况相当于每个channel共享同一个Toeplitz matrix，但是注意到我们可以让不同的channel使用不同的Toeplitz matrix，我们经验上发现，这样一定程度上可以增大模型的表达性，所以在TNN中，**每个channel**使用了不同的Toeplitz matrix。注意到形状为$n\times n$的Toeplitz matrix实际上只有$2n-1$个独立元素，为了方便后续讨论，我们定义如下映射：$f: \mathbb R^{(2n-1)\times 1} \to \mathbb R^{n\times n}$：
 $$
-f(\mathbf t)=f(t_{-n+1},\ldots, t_{n-1}) =\left[\begin{array}{cccc}
+f(\mathbf t)=f(t_{-n+1},\ldots, t_{n-1}) =\left[\begin{matrix}
 t_0 & t_{-1} & \cdots  & t_{-n+1} \\
 t_1 & t_0  &  &  \vdots \\
 \vdots &   &   t_0 & t_{-1} \\
 t_{n-1} & \ldots  & t_1 & t_0
-\end{array}\right] \in \mathbb R^{n\times n}.
+\end{matrix}\right] \in \mathbb R^{n\times n}.
 $$
 该映射的作用是将维度为$(2n-1)\times 1$的向量填充为$n\times n$的Toeplitz matrix。
 
@@ -206,7 +206,7 @@ def get_activation_fn(activation):
 
 ### Naive实现
 
-最朴素的实现自然是利用定义进行实现，例如如下代码中，我们使用4重循环，外面两重循环遍历batch, channel维度，第三重循环遍历输出位置，最后一重循环遍历求和项，注意到我们的$\mathbf T[:, i]$输入形式为$t_{-n+1}, ... , t_{-1}, t_0, t_1, ... , t_{n - 1} $，第三重循环遍历到$i$时，涉及的$t$为$t_{i}, t_{i-1},\ldots, t_{i-n+1}$，而$n - 1 + i$是$t_{i}$在$\mathbf T[:, i]$的实际索引：
+最朴素的实现自然是利用定义进行实现，例如如下代码中，我们使用4重循环，外面两重循环遍历batch, channel维度，第三重循环遍历输出位置，最后一重循环遍历求和项，注意到我们的$\mathbf T[:, i]$输入形式为$t_{-n+1}, ... , t_{-1}, t_0, t_1, ... , t_{n - 1}$，第三重循环遍历到$i$时，涉及的$t$为$t_{i}, t_{i-1},\ldots, t_{i-n+1}$，而$n - 1 + i$是$t_{i}$在$\mathbf T[:, i]$的实际索引：
 
 
 ```python
@@ -261,14 +261,14 @@ def tno_matrix(x, t):
 #### 定义
 矩阵$\mathbf C\in \mathbb R^{n\times n}$是一个[Circulant matrix](https://en.wikipedia.org/wiki/Circulant_matrix)当且仅当$\mathbf C_{ij}= c_{(i-j + n )\bmod n}$ ,即：
 $$
-\mathbf C=\left[\begin{array}{cccccc}
+\mathbf C=\left[\begin{matrix}
 c_0 & c_{n-1} &c_{n-2} & \cdots & \cdots & c_{1} \\
 c_1 & c_0 & c_{n-1} & \ddots & & \vdots \\
 c_2 & c_1 & \ddots & \ddots & \ddots & \vdots \\
 \vdots & \ddots & \ddots & \ddots & c_{n-1} & c_{n-2} \\
 \vdots & & \ddots & c_1 & c_0 & c_{n-1} \\
 c_{n-1} & \ldots & \ldots & c_2 & c_1 & c_0
-\end{array}\right] \in \mathbb R^{n\times n}.
+\end{matrix}\right] \in \mathbb R^{n\times n}.
 $$
 关于Circulant matrix，有如下重要性质：
 
@@ -283,6 +283,7 @@ $$
 #### 快速矩阵乘法
 
 现在考虑matrix-vector production操作$\mathbf M \mathbf x, \mathbf M\in \mathbb R^{n\times n}, \mathbf x\in \mathbb R^{n\times 1}$，那么：
+
 - 如果$\mathbf M$为一般的矩阵，那么该计算的时间复杂度为$O(n^2)$;
 - 如果$\mathbf M$为DFT矩阵，那么该计算的时间复杂度为$O(n \log n)$;
 
@@ -292,6 +293,7 @@ $$
 \mathbf C \mathbf x = \mathbf F^{\top} \Lambda \mathbf F \mathbf x.
 $$
 该计算可以分解为几个步骤：
+
 - $\mathbf x_{\mathrm{fft}}=\mathbf{Fx}$；
 - $\mathbf c_{\mathrm{fft}}=\mathbf F[c_0,c_1,\ldots, c_{n-1}]^\top$；
 - $\mathbf o_{\mathrm{fft}}=\mathbf x_{\mathrm{fft}}\odot \mathbf c_{\mathrm{fft}}$；
@@ -325,14 +327,14 @@ def circulant_fft(x, c):
 #### 定义
 矩阵$\mathbf T\in \mathbb R^{n\times n}$是一个Toeplitz matrix当且仅当$\mathbf T_{ij}= t_{i-j}$，即
 $$
-\mathbf T=\left[\begin{array}{cccccc}
+\mathbf T=\left[\begin{matrix}
 t_0 & t_{-1} &t_{-2} & \cdots & \cdots & t_{-n+1} \\
 t_1 & t_0 & t_{-1} & \ddots & & \vdots \\
 t_2 & t_1 & \ddots & \ddots & \ddots & \vdots \\
 \vdots & \ddots & \ddots & \ddots & t_{-1} & t_{n-2} \\
 \vdots & & \ddots & t_1 & t_0 & t_{-1} \\
 t_{n-1} & \ldots & \ldots & t_2 & t_1 & t_0
-\end{array}\right] \in \mathbb R^{n\times n}.
+\end{matrix}\right] \in \mathbb R^{n\times n}.
 $$
 从形式上来看，Toeplitz matrix和Circulant matrix非常像，唯一的区别在于前者的独立元素数量为$2n-1$，后者的独立元素数量为$n$，那么一个简单的思路就是将Toeplitz matrix嵌入到一个阶数大于等于$2n-1$矩阵中，而这个矩阵本生是一个Circulant matrix，下面来看下这是如何具体操作的。
 
@@ -363,10 +365,10 @@ $$
 使用分块矩阵的符号，我们可以定义：
 $$
 \begin{gathered}
- \mathbf C = \left[\begin{array}{cc}
+ \mathbf C = \left[\begin{matrix}
 \mathbf C_1 & \mathbf C_2\\
 \mathbf C_3 & \mathbf C_4\\
-\end{array}\right] \in \mathbb R^{2n\times 2n},\mathbf C_s \in \mathbb R^{n \times n}, s=1,2,3,4,
+\end{matrix}\right] \in \mathbb R^{2n\times 2n},\mathbf C_s \in \mathbb R^{n \times n}, s=1,2,3,4,
 \mathbf C_1 = \mathbf T 
 \end{gathered}.
 $$
@@ -377,26 +379,26 @@ $$
 
 对于向量$\mathbf x\in \mathbb R^{n}$, 定义:
 $$
-\mathbf x_1 = \left[\begin{array}{c}
+\mathbf x_1 = \left[\begin{matrix}
 \mathbf x\\
 \mathbf 0_n
-\end{array}\right] \in \mathbb R^{2n},
+\end{matrix}\right] \in \mathbb R^{2n},
 $$
 所以，
 $$
-\mathbf C \mathbf x_1 =\left[\begin{array}{cc}
+\mathbf C \mathbf x_1 =\left[\begin{matrix}
 \mathbf C_1 & \mathbf C_2\\
 \mathbf C_3 & \mathbf C_4\\
-\end{array}\right]\left[\begin{array}{c}
+\end{matrix}\right]\left[\begin{matrix}
 \mathbf x\\
 \mathbf 0_n
-\end{array}\right]=\left[\begin{array}{c}
+\end{matrix}\right]=\left[\begin{matrix}
 \mathbf C_1 \mathbf x\\
 \mathbf C_3 \mathbf x
-\end{array}\right]=\left[\begin{array}{c}
+\end{matrix}\right]=\left[\begin{matrix}
 \mathbf T \mathbf x\\
 \mathbf C_3 \mathbf x
-\end{array}\right] \in \mathbb R^{2n},
+\end{matrix}\right] \in \mathbb R^{2n},
 $$
 因此:
 $$
@@ -466,7 +468,7 @@ print(f"The output error between tno_naive and tno_matrix is {torch.norm(o1 - o3
 现在我们已经完成了大部分内容，这里最后补充如何将Tno适配到Autoregressive Language Model(causal)的情形。和Attention类似，只要保证Toeplitz matrix的上三角部分为$0$即可，即：
 
 $$
-\mathbf T=\left[\begin{array}{cccccc}
+\mathbf T=\left[\begin{matrix}
 t_0 & 0 & 0 & \cdots & \cdots & 0 \\
 t_1 & t_0 & 0 & \ddots & & \vdots \\
 
@@ -474,7 +476,7 @@ t_2 & t_1 & \ddots & \ddots & \ddots & \vdots \\
 \vdots & \ddots & \ddots & \ddots & 0 & 0 \\
 \vdots & & \ddots & t_1 & t_0 &0 \\
 t_{n-1} & \ldots & \ldots & t_2 & t_1 & t_0
-\end{array}\right] \in \mathbb R^{n\times n}.
+\end{matrix}\right] \in \mathbb R^{n\times n}.
 $$
 在实现时，注意到`fft`是zero padding，所以只需要将输入：
 ```python
@@ -904,12 +906,14 @@ class TnnLayer(nn.Module):
 # 全文总结
 
 通过之前的内容，您应该对TNN有所了解，这里，让我们对全文的核心进行总结：
+
 - Transformer可以分为Token mixing和Channel mixing；
 - Attention的作用是Token mixing，而相对位置信息对Attention很重要，我们提出使用相对位置信息(Toepltiz matrix)来代替Attention Matrix；
 - 使用Toeplitz matrix进行矩阵乘法可以加速，所以我们的方法理论上速度很快；
 - Toeplitz matrix的系数可以使用Rpe进行参数化，从而减少参数，结合指数衰减可以得到外推性；
 
 当然，TNN还有很多问题存在，例如：
+
 - 为什么相对位置信息就足够进行序列建模？
 - TNN真的只使用了相对位置信息吗？
 - TNN能达到理论速度上界吗？
