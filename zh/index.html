@@ -263,8 +263,8 @@
 <p><center><h1> The Annotated Tnn </h1></center></p>
 <p><center></p>
 <p><a href="https://openreview.net/pdf?id=IxmWsm4xrua">Toeplitz Neural Network for Sequence Modeling</a></p>
-<p></center></p>
-<p><img src="images/network.png" width="100%"/></p>
+<p></center>
+<img src="images/network.png" width="100%"/></p>
 <p><em>博客由<a href="https://github.com/Doraemonzzz">Doreamonzzz</a>撰写。</em></p>
 <p>更新日志：
 - 20230313，开始撰写博客；
@@ -274,8 +274,8 @@
 1. 了解TNN的动机和设计理念；
 2. 掌握TNN各个部件的实现；</p>
 <!-- 3. 学习如何将TNN应用在$n$维序列建模任务；
-4. 了解TNN的优缺点；
-5. 了解TNN和S4, RWKV等方法的联系； -->
+1. 了解TNN的优缺点；
+2. 了解TNN和S4, RWKV等方法的联系； -->
 
 <p>总而言之，在阅读完本博客之后，您将成为TNN的专家，并且可以将TNN应用到您的项目中，让我们开始吧。</p>
 <h1 id="_1">目录</h1>
@@ -571,8 +571,7 @@ t_{-2} & & \ddots & \ddots & t_{n-1} & \vdots & & \ddots & t_0 & t_{-1} \\
 t_{-1} & t_{-2} & \ldots & \ldots & t_0 & t_{n-1} & \ldots & \ldots & t_1 & t_0
 \end{array}\right] \in \mathbb R^{2n\times 2n}.
 </script>
-</p>
-<p>使用分块矩阵的符号，我们可以定义：
+使用分块矩阵的符号，我们可以定义：
 <script type="math/tex; mode=display">
 \begin{gathered}
  \mathbf C = \left[\begin{matrix}
@@ -582,8 +581,7 @@ t_{-1} & t_{-2} & \ldots & \ldots & t_0 & t_{n-1} & \ldots & \ldots & t_1 & t_0
 \mathbf C_1 = \mathbf T 
 \end{gathered}.
 </script>
-</p>
-<p>有了上述准备工作，可以得到Toeplitz matrix-vector production的快速算法。</p>
+有了上述准备工作，可以得到Toeplitz matrix-vector production的快速算法。</p>
 <h4 id="_10">快速矩阵乘法</h4>
 <p>对于向量$\mathbf x\in \mathbb R^{n}$, 定义:
 <script type="math/tex; mode=display">
@@ -663,8 +661,8 @@ print(f&quot;The output error between tno_naive and tno_matrix is {torch.norm(o1
 The output error between tno_naive and tno_matrix is 5.38119456905406e-05
 </code></pre>
 <h3 id="_13">补充</h3>
-<p>现在我们已经完成了大部分内容，这里最后补充如何将Tno适配到Autoregressive Language Model(causal)的情形。和Attention类似，只要保证Toeplitz matrix的上三角部分为$0$即可，即：</p>
-<p>$$
+<p>现在我们已经完成了大部分内容，这里最后补充如何将Tno适配到Autoregressive Language Model(causal)的情形。和Attention类似，只要保证Toeplitz matrix的上三角部分为$0$即可，即：
+$$
 \mathbf T=\left[\begin{matrix}
 t_0 &amp; 0 &amp; 0 &amp; \cdots &amp; \cdots &amp; 0 \
 t_1 &amp; t_0 &amp; 0 &amp; \ddots &amp; &amp; \vdots \</p>
@@ -893,13 +891,11 @@ $$
 <h2 id="tnn-layer">Tnn layer的实现</h2>
 <p>有了之前的铺垫，我们可以介绍Tnn Layer，该模块包含一个Token mixer(GTU)以及一个Channel mixer(GLU)，由于GLU和GTU非常相似，所以我们从GLU开始介绍。</p>
 <h3 id="glu">GLU</h3>
-<p><a href="https://arxiv.org/abs/2002.05202">GLU</a>是利用Gate的形式达到Channel mixing的作用，写成数学公式为：</p>
-<p>
+<p><a href="https://arxiv.org/abs/2002.05202">GLU</a>是利用Gate的形式达到Channel mixing的作用，写成数学公式为：
 <script type="math/tex; mode=display">
 \mathbf O = [f({\mathbf X} {\mathbf W_1}) \odot ({\mathbf X} {\mathbf W_2})] {\mathbf W_3}.
 </script>
-</p>
-<p>实现如下：</p>
+实现如下：</p>
 <pre><code class="language-python">class GLU(nn.Module):
     def __init__(self, d1, d2, act_fun, fina_act=&quot;None&quot;, dropout=0.0, bias=True):
         super().__init__()
