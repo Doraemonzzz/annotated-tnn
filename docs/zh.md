@@ -24,46 +24,46 @@ Toeplitz Neural Network(TNN)是一种全新的网络结构，以一种完全不�
 
 总而言之，在阅读完本博客之后，您将成为TNN的专家，并且可以将TNN应用到您的项目中，让我们开始吧。
 
-# 目录
+<!-- # 目录
 
 - [目录](#目录)
-- [预备知识](#预备知识)
-  - [Token mixing and channel mixing](#token-mixing-and-channel-mixing)
-  - [相对位置编码](#相对位置编码)
-- [TNN的动机](#tnn的动机)
-- [TNN的实现](#tnn的实现)
-  - [准备工作](#准备工作)
-  - [Tno的实现](#tno的实现)
-    - [Naive实现](#naive实现)
-    - [Matrix production实现](#matrix-production实现)
-    - [FFT实现](#fft实现)
-    - [Circulant matrix](#circulant-matrix)
-      - [定义](#定义)
-      - [快速矩阵乘法](#快速矩阵乘法)
-      - [实现](#实现)
-      - [小结](#小结)
+  - [预备知识](#预备知识)
+    - [Token mixing and channel mixing](#token-mixing-and-channel-mixing)
+    - [相对位置编码](#相对位置编码)
+  - [TNN的动机](#tnn的动机)
+  - [TNN的实现](#tnn的实现)
+    - [准备工作](#准备工作)
+    - [Tno的实现](#tno的实现)
+      - [Naive实现](#naive实现)
+      - [Matrix production实现](#matrix-production实现)
+      - [FFT实现](#fft实现)
+      - [Circulant matrix](#circulant-matrix)
+        - [定义](#定义)
+        - [快速矩阵乘法](#快速矩阵乘法)
+        - [实现](#实现)
+        - [小结](#小结)
     - [Toeplitz matrix](#toeplitz-matrix)
       - [定义](#定义-1)
-      - [快速矩阵乘法](#快速矩阵乘法-1)
-      - [实现](#实现-1)
-    - [验证实现](#验证实现)
-    - [补充](#补充)
-    - [小结](#小结-1)
-  - [Rpe的实现](#rpe的实现)
-    - [Naive实现](#naive实现-1)
-    - [Relative Position Encoder](#relative-position-encoder)
-    - [实现Relative Position Encoder](#实现relative-position-encoder)
-    - [将Tno和Rpe合并](#将tno和rpe合并)
-  - [Tnn layer的实现](#tnn-layer的实现)
-    - [GLU](#glu)
-    - [GTU](#gtu)
-    - [TnnLayer](#tnnlayer)
-    - [小结](#小结-2)
-- [全文总结](#全文总结)
+        - [快速矩阵乘法](#快速矩阵乘法-1)
+        - [实现](#实现-1)
+      - [验证实现](#验证实现)
+      - [补充](#补充)
+      - [小结](#小结-1)
+    - [Rpe的实现](#rpe的实现)
+      - [Naive实现](#naive实现-1)
+      - [Relative Position Encoder](#relative-position-encoder)
+      - [实现Relative Position Encoder](#实现relative-position-encoder)
+      - [将Tno和Rpe合并](#将tno和rpe合并)
+    - [Tnn layer的实现](#tnn-layer的实现)
+      - [GLU](#glu)
+      - [GTU](#gtu)
+      - [TnnLayer](#tnnlayer)
+      - [小结](#小结-2)
+  - [全文总结](#全文总结) -->
 
-# 预备知识
+## 预备知识
 
-## Token mixing and channel mixing
+### Token mixing and channel mixing
 让我们首先从Transformer开始。Transformer作为一个网络结构已经席卷了各个领域，其核心部分主要可以由如下两个计算公式描述：
 $$
 \begin{aligned}
@@ -83,7 +83,7 @@ $$
 
 大多数对Transformer的改进都是集中在token mixing:$\mathbf A \mathbf X$的计算上，以各种各样的方式降低其运算复杂度，TNN也是使用了类似的思路，最核心的一点就是利用了相对位置编码，或者说，Toeplitz矩阵。
 
-## 相对位置编码
+### 相对位置编码
 
 位置编码是Transformer中的重要组成部分，一开始广为使用的是[绝对位置编码(APE)](https://arxiv.org/abs/1706.03762)，这种编码的方式可以用如下计算方式概括：
 $$
@@ -114,7 +114,7 @@ $$
 
 这里，矩阵$\mathbf T$有一个数学名称——[Toeplitz矩阵](https://en.wikipedia.org/wiki/Toeplitz_matrix)，不难看出该矩阵有$2n-1$个独立元素。
 
-# TNN的动机
+## TNN的动机
 
 有了之前的准备工作，可以引入我们工作的两个动机：
 1. 既然相对位置信息如此重要，那么有没有可能只依赖于相对位置信息（Toeplitz matrix）进行token mixing呢？
@@ -130,10 +130,10 @@ $$
 
 <!-- 因此，在后续的讨论快速矩阵乘法时，我们指的是及$\mathbf T\mathbf x$，其中$\mathbf T\in \mathbb R^{n\times n}, \mathbf x \in \mathbb R^{n\times 1}$。 -->
 
-# TNN的实现
+## TNN的实现
 
 
-## 准备工作
+### 准备工作
 
 接下来的问题就是如何实现TNN，在此之前，我们对之前的公式做一定的调整。
 
@@ -201,9 +201,9 @@ def get_activation_fn(activation):
         return lambda x: x
 ```
 
-## Tno的实现
+### Tno的实现
 
-### Naive实现
+#### Naive实现
 
 最朴素的实现自然是利用定义进行实现，例如如下代码中，我们使用4重循环，外面两重循环遍历batch, channel维度，第三重循环遍历输出位置，最后一重循环遍历求和项，注意到我们的$\mathbf T[:, i]$输入形式为$t_{-n+1}, ... , t_{-1}, t_0, t_1, ... , t_{n - 1}$，第三重循环遍历到$i$时，涉及的$t$为$t_{i}, t_{i-1},\ldots, t_{i-n+1}$，而$n - 1 + i$是$t_{i}$在$\mathbf T[:, i]$的实际索引：
 
@@ -225,7 +225,7 @@ def tno_naive(x, t):
 
 这种实现显然太低效，但是至少我们有了一个正确的版本，这对我们后续改进算法也是有帮助的，不难看出这样计算的时间复杂度为$O(n^2d)$，空间复杂度为$O(nd)$（忽略batch维度）。                             
 
-### Matrix production实现
+#### Matrix production实现
 第二种实现是并行版本，其思路就是先构造Toeplitz matrix，然后利用矩阵乘法进行计算。最主要的部分是将映射$f$实现出来，代码基于[此处](https://stackoverflow.com/questions/69809789/is-there-any-way-to-create-a-tensor-with-a-specific-pattern-in-pytorch)，主要思路是先将输入改写为$t_0, t_{-1}, ... , t_{1-n}, t_{n - 1}, ... , t_1$，然后构造index $0, 1, \ldots,n -1, -(n - 1), ..., -1$，将输入映射到Toeplitz matrix，最后得到Toeplitz matrix进行矩阵乘法：
 
 
@@ -250,14 +250,14 @@ def tno_matrix(x, t):
 
 这种实现的好处是可以利用矩阵乘法，尽管复杂度依然为$O(n^2d)$，但实际效率会快很多；但是由于要构造Toeplitz matrix，所以空间复杂度为$O(n^2d)$，并且这部分还是一个很大的IO开销，所以实际中的速度并不会很快。
 
-### FFT实现
+#### FFT实现
 有了之前的铺垫，可以看出前两种方法无论是时间复杂度和空间复杂度相比Attention并没有什么优势，那么有没有办法解决这点呢？回答是肯定的，这就需要[FFT]()这把利刃。后续的讨论涉及到一些数学知识，这里先高度概括一下思路：
 1. 给出Circulant matrix的快速矩阵乘法算法；
 2. 建立Toeplitz marix和Circulant matrix的关系；
 
-### Circulant matrix
+#### Circulant matrix
 
-#### 定义
+##### 定义
 矩阵$\mathbf C\in \mathbb R^{n\times n}$是一个[Circulant matrix](https://en.wikipedia.org/wiki/Circulant_matrix)当且仅当$\mathbf C_{ij}= c_{(i-j + n )\bmod n}$ ,即：
 $$
 \mathbf C=\left[\begin{matrix}
@@ -279,7 +279,7 @@ $$
 $$
 证明可以参考[这里](https://ee.stanford.edu/~gray/toeplitz.pdf)。
 
-#### 快速矩阵乘法
+##### 快速矩阵乘法
 
 现在考虑matrix-vector production操作$\mathbf M \mathbf x, \mathbf M\in \mathbb R^{n\times n}, \mathbf x\in \mathbb R^{n\times 1}$，那么：
 
@@ -300,7 +300,7 @@ $$
 
 其中$\odot$表示element-wise production，可以看出，算法的总时间复杂度为$O(n\log n)$，空间复杂度为$O(n)$，所以Circulant matrix对应的矩阵乘法是高效的。
 
-#### 实现
+##### 实现
 有了之前的说明，不难利用`fft`实现上述计算：
 
 
@@ -318,7 +318,7 @@ def circulant_fft(x, c):
     return o
 ```
 
-#### 小结
+##### 小结
 
 现在我们已经有了一个关于Circulant matrix的高效矩阵乘法，那么下一个问题就是建立Toeplitz matrix和Circulant matrix的关系。
 
@@ -372,7 +372,7 @@ $$
 $$
 有了上述准备工作，可以得到Toeplitz matrix-vector production的快速算法。
 
-#### 快速矩阵乘法
+##### 快速矩阵乘法
 
 对于向量$\mathbf x\in \mathbb R^{n}$, 定义:
 $$
@@ -413,7 +413,7 @@ $$
 $$
 关于时间复杂度，注意到我们是将$n\times n$的Toeplitz matrix嵌入到一个$2n\times 2n$的Circulant matrix中，所以时间复杂度仍然为$O(n\log n)$。
 
-#### 实现
+##### 实现
 和Circulant matrix的情形类似，可以利用`fft`实现上述计算：
 
 
@@ -431,7 +431,7 @@ def tno_fft(x, t):
     return o
 ```
 
-### 验证实现
+#### 验证实现
 在之前的讨论中，我们给出了Tno的三种实现方式，在本节中，我们将验证这些实现的正确性。
 
 
@@ -461,7 +461,7 @@ print(f"The output error between tno_naive and tno_matrix is {torch.norm(o1 - o3
     The output error between tno_naive and tno_matrix is 5.38119456905406e-05
 
 
-### 补充
+#### 补充
 现在我们已经完成了大部分内容，这里最后补充如何将Tno适配到Autoregressive Language Model(causal)的情形。和Attention类似，只要保证Toeplitz matrix的上三角部分为$0$即可，即：
 $$
 \mathbf T=\left[\begin{matrix}
@@ -483,14 +483,14 @@ t2 = torch.cat([t_zero, t_pos, t_zero, t_neg], dim=0).cuda()
 t2 = torch.cat([t_zero, t_pos, t_zero], dim=0).cuda()
 ```
 
-### 小结
+#### 小结
 在本节中，我们从naive的算法开始，最终得到了一个基于FFT算法的高效实现，并且给出处理单向情形的方案。
 
-## Rpe的实现
+### Rpe的实现
 注意到Tno的计算涉及到$x,t$，$x$是输入，$t$是相对位置系数，所以下一步就是如何计算$t$。对于序列长度为$n$，特征维度为$d$的模型，我们一共有$(2n-1)\times d$个系数，所以接下来的问题就是如何得到这些系数。
 
 
-### Naive实现
+#### Naive实现
 最简单的思路就是直接给模型增加$(2n-1)\times d$个参数，但是这样做有几个问题：
 1. 当序列长度$n$比较大的时候，模型参数量会非常多；
 2. 尽管我们有$(2n-1)\times d$个系数，但是对于每个channel的$2n-1$个系数，不能完全假设他们是独立的，例如$t_1$和$t_{-1}$必然有内在联系；
@@ -500,7 +500,7 @@ t2 = torch.cat([t_zero, t_pos, t_zero], dim=0).cuda()
 那么是否有办法解决这些问题呢？回答是肯定的。
 
 
-### Relative Position Encoder
+#### Relative Position Encoder
 
 对于问题１，２，我们利用某种方式参数化这$(2n-1)\times d$个参数即可，最简单方式就是使用神经网络，特别的，我们使用的是一个名为Relative Position Encoder(RPE)的网络，网络的输入是1维实数$-(n-1), \ldots, (n-1)$，输出是$d$维特征。在使用时，我们会输入$[-(n-1),\ldots, (n-1)]^{\top} \in \mathbb R^{2n-1}$，输出的形状是$(2n-1)\times d$。
 
@@ -510,7 +510,7 @@ $$
 $$
 其中$\lambda$是一个超参，我们在$n=512$时选择$\lambda=0.99$。
 
-### 实现Relative Position Encoder
+#### 实现Relative Position Encoder
 
 有了之前的讨论，我们给出Relative Position Encoder的实现，本质是就是一个全连接网络，加上归一化和激活函数：
 
@@ -567,7 +567,7 @@ class Rpe(nn.Module):
         return x
 ```
 
-### 将Tno和Rpe合并
+#### 将Tno和Rpe合并
 
 在我们的原始实现中，Rpe是和Tno合并在一起的，完整的实现如下：
 
@@ -712,11 +712,11 @@ class Tno(nn.Module):
 
 ```
 
-## Tnn layer的实现
+### Tnn layer的实现
 
 有了之前的铺垫，我们可以介绍Tnn Layer，该模块包含一个Token mixer(GTU)以及一个Channel mixer(GLU)，由于GLU和GTU非常相似，所以我们从GLU开始介绍。
 
-### GLU
+#### GLU
 [GLU](https://arxiv.org/abs/2002.05202)是利用Gate的形式达到Channel mixing的作用，写成数学公式为：
 $$
 \mathbf O = [f({\mathbf X} {\mathbf W_1}) \odot ({\mathbf X} {\mathbf W_2})] {\mathbf W_3}.
@@ -751,7 +751,7 @@ class GLU(nn.Module):
         return output
 ```
 
-### GTU
+#### GTU
 
 GTU参考了GLU的思路，唯一的不同是在其中一个分支上使用了`Tno`，并且增加一个激活函数，写成数学公式即为：
 $$
@@ -829,7 +829,7 @@ class Gtu(nn.Module):
         return output
 ```
 
-### TnnLayer
+#### TnnLayer
 
 有了之前的准备工作，我们很容易实现出TnnLayer，因为这只不过是GTU和GLU的堆叠：
 
@@ -893,11 +893,11 @@ class TnnLayer(nn.Module):
 
 在使用时，您只需要将TransformerLayer替换成TnnLayer即可。
 
-### 小结
+#### 小结
 在本节中，我们完成了TnnLayer的实现，有了之前的铺垫工作，这一切并不困难。现在，您已经可以将Tnn应用到您的项目中了。
 
 
-# 全文总结
+## 全文总结
 
 通过之前的内容，您应该对TNN有所了解，这里，让我们对全文的核心进行总结：
 
